@@ -14,13 +14,16 @@ class CodeWrapper(
 
         val newlineRegex: Regex = "(\\r?\\n)".toRegex(),
 
+        val htmlSeparatorsRegex: Regex = "<[pP]>|<[bB][rR] ?/?>".toRegex(),
+
         // A string that contains only two new lines demarcates a paragraph.
-        val paragraphSeparatorPattern: Pattern = Pattern.compile("$newlineRegex\\s*$commentRegex\\s*$newlineRegex"),
+        val paragraphSeparatorPattern: Pattern = Pattern.compile(
+                "($newlineRegex)\\s*$commentRegex\\s*($htmlSeparatorsRegex)?$newlineRegex"),
 
         val tabPlaceholder: String = "☃",
 
         // A string containing a comment or empty space is considered an indent.
-        val indentRegex: String = "^(\\s|$tabPlaceholder)*$commentRegex\\s*",
+        val indentRegex: String = "^(\\s|$tabPlaceholder)*$commentRegex\\s*($htmlSeparatorsRegex)?",
         val indentPattern: Pattern = Pattern.compile(indentRegex),
 
         // New lines appended to text during wrapping will use this character.
@@ -55,7 +58,7 @@ class CodeWrapper(
      * Wrap ``text`` to the chosen width.
 
      * Preserve the amount of white space between paragraphs after wrapping
-     * them. A paragraph is defined as text separated by empty lines.
+     * them. A paragraph is defined as text separated by empty lines. (TODO this is stale)
 
      * @param text the text to wrap, which may contain multiple paragraphs.
      * *
@@ -70,12 +73,15 @@ class CodeWrapper(
         val result = StringBuilder()
         val paragraphMatcher = paragraphSeparatorPattern.matcher(textWithTabPlaceholders)
         val textLength = textWithTabPlaceholders.length
-        var location: Int = 0
+        var location = 0
+        var leadingNewline = ""
 
         while (paragraphMatcher.find()) {
+            val paragraphSeparator = paragraphMatcher.group()
+            leadingNewline = paragraphMatcher.group(1)
             val paragraph = textWithTabPlaceholders.substring(location, paragraphMatcher.start())
             result.append(wrapParagraph(paragraph))
-            result.append(paragraphMatcher.group())
+            result.append(paragraphSeparator)
             location = paragraphMatcher.end()
         }
 
@@ -110,7 +116,7 @@ class CodeWrapper(
         val emptyCommentPattern = Pattern.compile("$indentRegex\$", Pattern.MULTILINE)
         val emptyCommentMatcher = emptyCommentPattern.matcher(paragraph)
         val paragraphLength = paragraph.length
-        var location: Int = 0
+        var location = 0
 
         while (emptyCommentMatcher.find()) {
             val match = emptyCommentMatcher.group()

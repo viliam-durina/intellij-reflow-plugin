@@ -135,6 +135,28 @@ class CodeWrapperTests {
                 "*/", wrappedText)
     }
 
+    @Test
+    fun testWrapMultipleCommentParagraphsSeparatedWithHtml() {
+        val originalText = "/*\n" +
+                " * This is my text. This is my long multi-line comment opener text. More text please. " +
+                "This is yet another bunch of text in my test comment, so I will get multiple lines in the comment.\n" +
+                " * <p>\n" +
+                " * This is another line of text.\n" +
+                " * <br/>\n" +
+                " * And yet another long line of text. Text going on and an endlessly, much longer than it really should.\n" +
+                " */"
+        val wrappedText = wrapper.wrap(originalText)
+        assertEquals("/*\n" +
+                " * This is my text. This is my long multi-line comment opener text. More\n" +
+                " * text please. This is yet another bunch of text in my test comment, so I\n" +
+                " * will get multiple lines in the comment.\n" +
+                " * <p>\n" +
+                " * This is another line of text.\n" +
+                " * <br/>\n" +
+                " * And yet another long line of text. Text going on and an endlessly, much\n" +
+                " * longer than it really should.\n" +
+                " */", wrappedText)
+    }
 
     @Test
     fun testWrapRetainsSpaceIndent() {
