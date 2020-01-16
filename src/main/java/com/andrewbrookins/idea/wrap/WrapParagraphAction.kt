@@ -51,37 +51,50 @@ class WrapParagraphAction : EditorAction(WrapParagraphAction.WrapHandler()) {
                     var selectionEnd = document.getLineEndOffset(startingLine)
                     var upwardLineTracker = startingLine
                     var downwardLineTracker = startingLine
+                    val selectionModel = editor.selectionModel
 
-                    // Don't try to wrap if the user starts on a line that looks blank.
-                    if (getTextAtOffset(document, wrapper, startingLine).lineData.rest.isBlank()) {
-                        return;
-                    }
+                    val text: String
 
-                    // Starting from the current line, move upward until we reach an empty line
-                    // or the start of the document.
-                    while (upwardLineTracker > 0) {
-                        upwardLineTracker--
-                        val textData = getTextAtOffset(document, wrapper, upwardLineTracker)
-                        if (textData.lineData.rest.isBlank()) {
-                            break
+                    if (!selectionModel.hasSelection()) {
+                        // Don't try to wrap if the user starts on a line that looks blank.
+                        if (getTextAtOffset(document, wrapper, startingLine).lineData.rest.isBlank()) {
+                            return;
                         }
-                        selectionStart = textData.lineStart
-                    }
 
-                    // Starting from the current line, move downward until we reach an empty line
-                    // or the end of the document.
-                    while (downwardLineTracker < documentEnd) {
-                        downwardLineTracker++
-                        val textData = getTextAtOffset(document, wrapper, downwardLineTracker)
-                        if (textData.lineData.rest.isBlank()) {
-                            break
+                        // Starting from the current line, move upward until we reach an empty line
+                        // or the start of the document.
+                        while (upwardLineTracker > 0) {
+                            upwardLineTracker--
+                            val textData = getTextAtOffset(document, wrapper, upwardLineTracker)
+                            if (textData.lineData.rest.isBlank()) {
+                                break
+                            }
+                            selectionStart = textData.lineStart
                         }
-                        selectionEnd = textData.lineEnd
+
+                        // Starting from the current line, move downward until we reach an empty line
+                        // or the end of the document.
+                        while (downwardLineTracker < documentEnd) {
+                            downwardLineTracker++
+                            val textData = getTextAtOffset(document, wrapper, downwardLineTracker)
+                            if (textData.lineData.rest.isBlank()) {
+                                break
+                            }
+                            selectionEnd = textData.lineEnd
+                        }
+
+                        text = document.getText(TextRange(selectionStart, selectionEnd))
+                    } else {
+                        text = selectionModel.selectedText ?: return
+                        selectionStart = selectionModel.selectionStart
+                        selectionEnd = selectionModel.selectionEnd
                     }
 
-                    val text = document.getText(TextRange(selectionStart, selectionEnd))
+                    if (text.isBlank()) {
+                        return
+                    }
+
                     val wrappedText = wrapper.wrap(text)
-
                     document.replaceString(selectionStart, selectionEnd, wrappedText)
                 }
             })
