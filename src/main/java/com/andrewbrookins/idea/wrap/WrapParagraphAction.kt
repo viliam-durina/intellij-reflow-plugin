@@ -33,11 +33,11 @@ class WrapParagraphAction : EditorAction(WrapParagraphAction.WrapHandler()) {
     }
 
     private class WrapHandler : EditorActionHandler() {
-        override fun execute(editor: Editor, dataContext: DataContext) {
+        override fun execute(editor: Editor, dataContext: DataContext?) {
             super.execute(editor, dataContext)
             ApplicationManager.getApplication().runWriteAction(object : Runnable {
                 override fun run() {
-                    val project = LangDataKeys.PROJECT.getData(dataContext)
+                    val project = LangDataKeys.PROJECT.getData(dataContext!!)
                     val document = editor.document
                     val columnWidthOverride = WrapSettingsProvider.getInstance().state?.columnWidthOverride
                     val useMinimumRaggednessAlgorithm = WrapSettingsProvider.getInstance().state?.useMinimumRaggednessAlgorithm ?: false
